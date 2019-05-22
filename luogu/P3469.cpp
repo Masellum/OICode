@@ -7,6 +7,7 @@ const int MAXN = 100000 + 5;
 int n, m;
 int to[MAXN * 2], next[MAXN * 2], head[MAXN], cnt;
 int size[MAXN], dfn[MAXN], low[MAXN], ts;
+long long ans[MAXN];
 bool isCut[MAXN];
 std::vector<int> counts[MAXN];
 
@@ -27,27 +28,29 @@ void tarjan(int u, int f) {
             tarjan(v, u);
             size[u] += size[v];
             low[u] = std::min(low[u], low[v]);
-            // tmp += size[v];
-            if (low[v] >= dfn[u]) {
-                tmp += size[v];
-                isCut[u] = true;
-                counts[u].push_back(size[v]);
-            }
-            // if (low[v] >= dfn[u] && u != f) {
+            tmp += size[v];
+            // if (low[v] >= dfn[u]) {
+            //     ans[u] += 1ll * tmp * size[v];
+            //     tmp += size[v];
             //     isCut[u] = true;
             //     counts[u].push_back(size[v]);
             // }
-            // if (u == f) {
-            //     counts[u].push_back(size[v]);
-            //     child++;
-            // }
+            if (low[v] >= dfn[u] && u != f) {
+                isCut[u] = true;
+                counts[u].push_back(size[v]);
+            }
+            if (u == f) {
+                counts[u].push_back(size[v]);
+                child++;
+            }
         } else if (dfn[v] < dfn[u]) {
             low[u] = std::min(low[u], dfn[v]);
         }
     }
-    // if (u == f && child > 1) {
-    //     isCut[u] = true;
-    // }
+    if (u == f && child > 1) {
+        isCut[u] = true;
+    }
+    // ans[u] += 1ll * tmp * (n - tmp - 1);
     if (isCut[u] && n - tmp - 1 != 0) {
         counts[u].push_back(n - tmp - 1);
     }
@@ -55,7 +58,7 @@ void tarjan(int u, int f) {
 
 int main() {
 #ifndef ONLINE_JUDGE
-    // freopen("data/PP3469.in", "r", stdin);
+    freopen("data/PP3469.in", "r", stdin);
     freopen("data/P3469.out", "w", stdout);
 #endif
     scanf("%d %d", &n, &m);
@@ -64,8 +67,8 @@ int main() {
         addEdge(u, v);
         addEdge(v, u);
     }
-    // tarjan(1, 1);
-    tarjan(1, 0);
+    tarjan(1, 1);
+    // tarjan(1, 0);
     // for (int i = 1; i <= n; ++i) {
     //         if (isCut[i]) printf("T ");
     //         else printf("F ");
@@ -74,11 +77,16 @@ int main() {
     //     }
     //     puts("");
     // }
+    // for (int i = 1; i <= n; ++i) {
+    //     printf("%lld\n", (ans[i] + n - 1) * 2);
+    // }
     for (int i = 1; i <= n; ++i) {
         long long ans = 2 * (n - 1);
         if (isCut[i]) {
-            for (auto it = counts[i].begin(); it != counts[i].end(); it++) {
-                ans += 1ll * (*it) * (n - *it - 1);
+            for (int j = 0; j < counts[i].size(); ++j) {
+            // for (auto it = counts[i].begin(); it != counts[i].end(); it++) {
+                ans += 1ll * counts[i][j] * (n - counts[i][j] - 1);
+                // ans += 1ll * (*it) * (n - *it - 1);
                 // for (auto it_ = it + 1; it_ != counts[i].end(); it_++) {
                 //     ans += 2 * (*it) * (*it_);
                 // }

@@ -1,6 +1,6 @@
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
-#include <algorithm>
 
 const int MAX = 500000 + 5;
 
@@ -38,13 +38,20 @@ void dfs(int x, int fa) {
 }
 
 int lca(int x, int y) {
-    if (dep[x] < dep[y]) std::swap(x, y);
+    if (dep[x] < dep[y])
+        std::swap(x, y);
     while (dep[x] > dep[y]) {
         x = f[x][log_2[dep[x] - dep[y]] - 1];
     }
-    if (x == y) return x;
+    // for (int i = 21; i >= 0; --i) {
+    //     if (dep[f[x][i]] >= dep[y])
+    //         x = f[x][i];
+    // }
+    if (x == y)
+        return x;
     for (int j = log_2[dep[x]]; j >= 0; --j) {
-        if (f[x][j] == f[y][j]) continue;
+        if (f[x][j] == f[y][j])
+            continue;
         x = f[x][j];
         y = f[y][j];
     }

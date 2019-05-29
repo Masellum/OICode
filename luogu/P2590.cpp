@@ -6,8 +6,6 @@
 #define LC root * 2
 #define RC root * 2 + 1
 
-#define FUCK(x) printf("Fuck "#x)
-
 const int MAXN = 30000 + 5;
 
 int n, q, to[2 * MAXN], next[2 * MAXN], head[MAXN], cnt;

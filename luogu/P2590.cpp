@@ -3,8 +3,10 @@
 #include <cstdio>
 #include <cstring>
 
-#define LC root * 2, l, mid
-#define RC root * 2 + 1, mid + 1, r
+#define LC root * 2
+#define RC root * 2 + 1
+
+#define FUCK(x) printf("Fuck "#x)
 
 const int MAXN = 30000 + 5;
 
@@ -53,8 +55,8 @@ struct SegmentTree {
     int max[4 * MAXN];
 
     void pushUp(int root) {
-        sum[root] = sum[root * 2] + sum[root * 2 + 1];
-        max[root] = std::max(max[root * 2], max[root * 2 + 1]);
+        sum[root] = sum[LC] + sum[RC];
+        max[root] = std::max(max[LC], max[RC]);
     }
 
     void build(int root, int l, int r) {
@@ -63,20 +65,21 @@ struct SegmentTree {
             return;
         }
         int mid = (l + r) / 2;
-        build(LC);
-        build(RC);
+        build(LC, l, mid);
+        build(RC, mid + 1, r);
         pushUp(root);
     }
 
     void modify(int root, int l, int r, int x, int d) {
         if (l == r) {
             sum[root] = max[root] = d;
+            return;
         }
         int mid = (l + r) / 2;
         if (x <= mid)
-            modify(LC, x, d);
+            modify(LC, l, mid, x, d);
         else
-            modify(RC, x, d);
+            modify(RC, mid + 1, r, x, d);
         pushUp(root);
     }
 
@@ -85,12 +88,12 @@ struct SegmentTree {
             return sum[root];
         }
         int mid = (l + r) / 2;
-        if (left <= mid) {
-            return querySum(LC, left, right);
-        } else if (right > mid) {
-            return querySum(RC, left, right);
+        if (right <= mid) {
+            return querySum(LC, l, mid, left, right);
+        } else if (left > mid) {
+            return querySum(RC, mid + 1, r, left, right);
         } else {
-            return 1ll * querySum(LC, left, mid) + querySum(RC, mid + 1, right);
+            return 1ll * querySum(LC, l, mid, left, mid) + querySum(RC, mid + 1, r, mid + 1, right);
         }
     }
 
@@ -99,12 +102,12 @@ struct SegmentTree {
             return max[root];
         }
         int mid = (l + r) / 2;
-        if (left <= mid) {
-            return queryMax(LC, left, right);
-        } else if (right > mid) {
-            return queryMax(RC, left, right);
+        if (right <= mid) {
+            return queryMax(LC, l, mid, left, right);
+        } else if (left > mid) {
+            return queryMax(RC, mid + 1, r, left, right);
         } else {
-            return std::max(queryMax(LC, left, mid), queryMax(RC, mid + 1, right));
+            return std::max(queryMax(LC, l, mid, left, mid), queryMax(RC, mid + 1, r, mid + 1, right));
         }
     }
 } tree;
@@ -147,7 +150,7 @@ int main() {
                 u = fa[top[u]];
             }
             if (dep[u] > dep[v]) std::swap(u, v);
-            ans = std::max(ans, 1ll * tree.querySum(1, 1, n, dfn[u], dfn[v]));
+            ans = std::max(ans, 1ll * tree.queryMax(1, 1, n, dfn[u], dfn[v]));
             printf("%lld\n", ans);
         }
     }

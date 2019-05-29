@@ -116,10 +116,6 @@ struct SegmentTree {
 } segT;
 
 int main() {
-#ifndef ONLINE_JUDGE
-    freopen("data/P3834.in", "r", stdin);
-    freopen("data/P3834.out", "w", stdout);
-#endif
     scanf("%d %d %d %d", &n, &m, &r, &p);
     for (int i = 1; i <= n; ++i) {
         scanf("%d", weight + i);

@@ -68,6 +68,7 @@ struct SegmentTree {
             sum[root] += d;
             return;
         }
+        pushDown(root, l, r);
         int mid = (l + r) / 2;
         if (p <= mid) {
             modifyPoint(LC, l, mid, p, d);
@@ -123,15 +124,10 @@ struct SegmentTree {
             return query(LC, l, mid, left, mid) +
                    query(RC, mid + 1, r, mid + 1, right);
         }
-        pushUp(root);
     }
 } tree;
 
 int main() {
-#ifndef ONLINE_JUDGE
-    freopen("data/P3178.in", "r", stdin);
-    freopen("data/P3178.out", "w", stdout);
-#endif
     scanf("%d %d", &n, &m);
     for (int i = 1; i <= n; ++i) {
         scanf("%d", weight + i);

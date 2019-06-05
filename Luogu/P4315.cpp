@@ -56,18 +56,16 @@ struct SegmentTree {
     void pushUp(int root) { max[root] = std::max(max[LC], max[RC]); }
 
     void build(int root, int l, int r) {
+        tagAdd[root] = 0;
+        tagCover[root] = -1;
         if (l == r) {
             max[root] = vertexWeight[pos[l]];
-            tagAdd[root] = 0;
-            tagCover[root] = -1;
             return;
         }
         int mid = (l + r) / 2;
         build(LC, l, mid);
         build(RC, mid + 1, r);
         pushUp(root);
-        tagAdd[root] = 0;
-        tagCover[root] = -1;
     }
 
     void add(int root, int l, int r, int d) {
@@ -82,7 +80,6 @@ struct SegmentTree {
     }
 
     void pushDown(int root, int l, int r) {
-        if (l == r) return;
         int mid = (l + r) / 2;
         if (tagCover[root] != -1) {
             cover(LC, l, mid, tagCover[root]);
@@ -150,10 +147,6 @@ struct SegmentTree {
 } tree;
 
 int main() {
-#ifndef ONLINE_JUDGE
-    freopen("./testdata/P4315/3.in", "r", stdin);
-    freopen("./testdata/P4315/3.out", "w", stdout);
-#endif
     scanf("%d", &n);
     for (int i = 1, u, v, w; i < n; ++i) {
         scanf("%d %d %d", &u, &v, &w);
@@ -171,7 +164,7 @@ int main() {
         if (opt[0] == 'C') {
             if (opt[1] == 'h') {
                 k = u, w = v;
-                u = to[2 * k], v = to[2 * k + 1];
+                u = to[2 * k], v = to[2 * k - 1];
                 if (dep[u] < dep[v]) std::swap(u, v);
                 tree.modifyCover(1, 1, n, dfn[u], dfn[u], w);
             } else {
@@ -192,8 +185,7 @@ int main() {
                 u = fa[top[u]];
             }
             if (dep[u] > dep[v]) std::swap(u, v);
-            tree.modifyAdd(1, 1, n, dfn[u], dfn[v], w);
-            tree.modifyAdd(1, 1, n, dfn[u], dfn[u], -w);
+            if (u != v) tree.modifyAdd(1, 1, n, dfn[u] + 1, dfn[v], w);
         } else {
             ans = INT_MIN;
             while (top[u] != top[v]) {

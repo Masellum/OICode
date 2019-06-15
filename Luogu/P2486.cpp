@@ -8,7 +8,8 @@ const int MAXN = 100000 + 5;
 
 int n, m;
 int head[MAXN], to[2 * MAXN], next[2 * MAXN], cnt;
-int color[MAXN], fa[MAXN], dep[MAXN], size[MAXN], son[MAXN], top[MAXN], dfn[MAXN], pos[MAXN], ts;
+int color[MAXN], fa[MAXN], dep[MAXN], size[MAXN], son[MAXN], top[MAXN],
+    dfn[MAXN], pos[MAXN], ts;
 
 void addEdge(int u, int v) {
     to[++cnt] = v;
@@ -40,18 +41,21 @@ void dfs2(int u, int t) {
     dfs2(son[u], t);
     for (int e = head[u], v = to[e]; e; e = next[e], v = to[e]) {
         if (v == fa[u] || v == son[u])
-            return;
+            continue;
         dfs2(v, v);
     }
 }
 
 struct SegmentTree {
-    int count[4 * MAXN], leftColor[4 * MAXN], rightColor[4 * MAXN], tag[4 * MAXN];
+    int count[4 * MAXN], leftColor[4 * MAXN], rightColor[4 * MAXN],
+        tag[4 * MAXN];
 
     void pushUp(int root) {
         count[root] = count[LC] + count[RC];
         if (rightColor[LC] == leftColor[RC])
             count[root]--;
+        leftColor[root] = leftColor[LC];
+        rightColor[root] = rightColor[RC];
     }
 
     void build(int root, int l, int r) {
@@ -64,8 +68,6 @@ struct SegmentTree {
         int mid = (l + r) / 2;
         build(LC, l, mid);
         build(RC, mid + 1, r);
-        leftColor[root] = leftColor[LC];
-        rightColor[root] = rightColor[RC];
         pushUp(root);
     }
 
@@ -76,7 +78,7 @@ struct SegmentTree {
     }
 
     void pushDown(int root, int l, int r) {
-        if (tag[root] && l != r) {
+        if (tag[root]) {
             cover(LC, tag[root]);
             cover(RC, tag[root]);
             tag[root] = 0;
@@ -101,19 +103,31 @@ struct SegmentTree {
         pushUp(root);
     }
 
-    int intervalQuery(int root, int l, int r, int left, int right) {
+    int intervalQuery(int root, int l, int r, int left, int right,
+                      int initialLeft, int initialRight, int &colorL,
+                      int &colorR) {
+        if (l == initialLeft)
+            colorL = leftColor[root];
+        if (r == initialRight)
+            colorR = rightColor[root];
         if (l == left && r == right) {
             return count[root];
         }
         pushDown(root, l, r);
         int mid = (l + r) / 2, ans;
         if (right <= mid) {
-            return intervalQuery(LC, l, mid, left, right);
+            return intervalQuery(LC, l, mid, left, right, initialLeft,
+                                 initialRight, colorL, colorR);
         } else if (left > mid) {
-            return intervalQuery(RC, mid + 1, r, left, right);
+            return intervalQuery(RC, mid + 1, r, left, right, initialLeft,
+                                 initialRight, colorL, colorR);
         } else {
-            ans = intervalQuery(LC, l, mid, left, mid) + intervalQuery(RC, mid + 1, r, mid + 1, right);
-            if (rightColor[LC] == leftColor[RC]) ans--;
+            ans = intervalQuery(LC, l, mid, left, mid, initialLeft,
+                                initialRight, colorL, colorR) +
+                  intervalQuery(RC, mid + 1, r, mid + 1, right, initialLeft,
+                                initialRight, colorL, colorR);
+            if (rightColor[LC] == leftColor[RC])
+                ans--;
             return ans;
         }
     }
@@ -121,24 +135,36 @@ struct SegmentTree {
 
 void modify(int u, int v, int c) {
     while (top[u] != top[v]) {
-        if (dep[top[u]] < dep[top[v]]) std::swap(u, v);
+        if (dep[top[u]] < dep[top[v]])
+            std::swap(u, v);
         tree.intervalModify(1, 1, n, dfn[top[u]], dfn[u], c);
         u = fa[top[u]];
     }
-    if (dep[u] > dep[v]) std::swap(u, v);
+    if (dep[u] > dep[v])
+        std::swap(u, v);
     tree.intervalModify(1, 1, n, dfn[u], dfn[v], c);
 }
 
 int query(int u, int v) {
-    int res = 0;
+    int res = 0, colorL, colorR, lastLU = -1, lastLV = -1;
     while (top[u] != top[v]) {
-        if (dep[top[u]] < dep[top[v]]) std::swap(u, v);
-        res += tree.intervalQuery(1, 1, n, dfn[top[u]], dfn[u]);
-        if (color[fa[top[u]]] == color[top[u]]) res--;
+        if (dep[top[u]] < dep[top[v]]) {
+            std::swap(u, v);
+            std::swap(lastLU, lastLV);
+        }
+        res += tree.intervalQuery(1, 1, n, dfn[top[u]], dfn[u], dfn[top[u]], dfn[u], colorL, colorR);
+        if (lastLU == colorR)
+            res--;
+        lastLU = colorL;
         u = fa[top[u]];
     }
-    if (dep[u] > dep[v]) std::swap(u, v);
-    res += tree.intervalQuery(1, 1, n, dfn[u], dfn[v]);
+    if (dep[u] > dep[v]) {
+        std::swap(u, v);
+        std::swap(lastLU, lastLV);
+    }
+    res += tree.intervalQuery(1, 1, n, dfn[u], dfn[v], dfn[u], dfn[v], colorL, colorR);
+    if (lastLU == colorL) res--;
+    if (lastLV == colorR) res--;
     return res;
 }
 

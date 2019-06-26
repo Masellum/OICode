@@ -11,20 +11,25 @@ const int MAXN = 200000 + 5;
 
 int n, m;
 int head[MAXN], to[2 * MAXN], next[2 * MAXN], edgeWeight[2 * MAXN], cnt;
-int vertexWeight[MAXN], fat[MAXN], dep[MAXN], size[MAXN], son[MAXN], top[MAXN],
+int vertexWeight[MAXN], fath[MAXN], dep[MAXN], size[MAXN], son[MAXN], top[MAXN],
     dfn[MAXN], pos[MAXN], ts;
 long long ans0;
 
 struct Edge {
     int from, to, weight, num;
+    bool inMST;
 
     Edge() {}
-    Edge(int from, int to, int weight, int num) : from(from), to(to), weight(weight), num(num) {}
+    Edge(int from, int to, int weight, int num) : from(from), to(to), weight(weight), num(num), inMST(false) {}
+
 } graphEdge[MAXN], *tail = graphEdge + 1;
 
-// inline void addGraphEdge(int u, int v, int w) { *(++tail) = Edge(u, v, w); }
-inline void addGraphEdge(int u, int v, int w, int t) {
-    *tail++ = Edge(u, v, w, t);
+inline void addGraphEdge(int u, int v, int w, int num) {
+    tail->from = u;
+    tail->to = v;
+    tail->weight = w;
+    tail->num = num;
+    *tail++ = Edge(u, v, w, num);
 }
 
 inline void addEdge(int u, int v, int w) {
@@ -34,15 +39,24 @@ inline void addEdge(int u, int v, int w) {
     edgeWeight[cnt] = w;
 }
 
+// struct Edge {
+//     int from, to, weight, num;
+//     Edge() {}
+//     Edge(int from, int to, int weight, int num) : from(from)
+// }
+
 // struct DisjointSet {
     int fa[MAXN], rank[MAXN];
 
+    // DisjointSet() {}
+
     // DisjointSet(int n) {
-        // for (int i = 1; i <= n; ++i) {
-        //     fa[i] = i;
-        //     rank[i] = 1;
-        // }
-    // }
+    void init(int n) {
+        for (int i = 1; i <= n; ++i) {
+            fa[i] = i;
+            rank[i] = 1;
+        }
+    }
 
     int find(int x) { return fa[x] == x ? x : (fa[x] = find(fa[x])); }
 
@@ -60,41 +74,35 @@ inline void addEdge(int u, int v, int w) {
             rank[x]++;
         }
     }
-// };
+// } ds;
 
+// void kruskal(DisjointSet &ds) {
 void kruskal() {
     // DisjointSet ds(m);
-for (int i = 1; i <= n; ++i) {
-            fa[i] = i;
-            rank[i] = 1;
-        }
-    std::sort(graphEdge+ 1, graphEdge + m + 1, [](const Edge &a, const Edge &b) -> bool {
+    init(n);
+    std::sort(graphEdge + 1, graphEdge + m + 1, [](const Edge &a, const Edge &b) -> bool {
         return a.weight < b.weight;
     });
     for (int i = 1, u, v, w; i <= m; ++i) {
         u = graphEdge[i].from, v = graphEdge[i].to, w = graphEdge[i].weight;
         // if (ds.find(u) != ds.find(v)) {
-        //     ds.merge(u, v);
-        //     addEdge(u, v, w);
-        //     addEdge(v, u, w);
-        //     ans0 += w;
-        // }
+            // ds.merge(u, v);
         if (find(u) != find(v)) {
             merge(u, v);
             addEdge(u, v, w);
             addEdge(v, u, w);
             ans0 += w;
+            graphEdge[i].inMST = true;
         }
     }
-    std::sort(graphEdge+ 1, graphEdge + m + 1, [](const Edge &a, const Edge &b) -> bool {
+    std::sort(graphEdge + 1, graphEdge + m + 1, [](const Edge &a, const Edge &b) -> bool {
         return a.num < b.num;
     });
- 
 }
 
 void dfs1(int u, int f) {
-    fat[u] = f;
-    dep[u] = dep[fat[u]] + 1;
+    fath[u] = f;
+    dep[u] = dep[fath[u]] + 1;
     size[u] = 1;
     son[u] = -1;
     for (int e = head[u], v = to[e]; e; e = next[e], v = to[e]) {
@@ -116,7 +124,7 @@ void dfs2(int u, int t) {
         return;
     dfs2(son[u], t);
     for (int e = head[u], v = to[e]; e; e = next[e], v = to[e]) {
-        if (v == fat[u] || v == son[u])
+        if (v == fath[u] || v == son[u])
             continue;
         dfs2(v, v);
     }
@@ -161,22 +169,25 @@ int query(int u, int v) {
         if (dep[top[u]] < dep[top[v]])
             std::swap(u, v);
         res = std::max(res, tree.query(1, 1, n, dfn[top[u]], dfn[u]));
-        u = fat[top[u]];
+        u = fath[top[u]];
     }
     if (dep[u] > dep[v])
         std::swap(u, v);
-    if (u != v) {
+    if (dfn[u] < dfn[v]) {
         res = std::max(res, tree.query(1, 1, n, dfn[u] + 1, dfn[v]));
     }
     return res;
 }
 
 int main() {
+    srand(time(NULL));
     scanf("%d %d", &n, &m);
     for (int i = 1, u, v, w; i <= m; ++i) {
         scanf("%d %d %d", &u, &v, &w);
         addGraphEdge(u, v, w, i);
     }
+    // ds = DisjointSet(m);
+    // kruskal(ds);
     kruskal();
     dfs1(1, 0);
     dfs2(1, 1);
@@ -185,7 +196,7 @@ int main() {
     for (int i = 1, u, v, w; i <= m; ++i) {
         res = LLONG_MIN;
         u = graphEdge[i].from, v = graphEdge[i].to, w = graphEdge[i].weight;
-        if (find(u) == find(v))
+        if (graphEdge[i].inMST)
             res = ans0;
         else
             res = std::max(res, ans0 + w - query(u, v));

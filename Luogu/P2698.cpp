@@ -17,22 +17,23 @@ bool check(int w) {
     memset(maxQueue, 0, sizeof(maxQueue));
     maxHead = maxTail = minHead = minTail = 0;
     minQueue[minTail++] = maxQueue[maxTail++] = 1;
+    if (drops[maxQueue[maxHead]].y - drops[minQueue[minHead]].y >= d) return true;
     for (int i = 2; i <= n; ++i) {
         while (drops[i].y >= drops[maxQueue[maxTail - 1]].y && maxTail > maxHead) {
             maxTail--;
         }
         maxQueue[maxTail++] = i;
-        while (drops[maxQueue[maxTail - 1]].x - drops[maxQueue[maxHead]].x + 1 > w) {
+        while (drops[maxQueue[maxTail - 1]].x - drops[maxQueue[maxHead]].x > w) {
             maxHead++;
         }
         while (drops[i].y <= drops[minQueue[minTail - 1]].y && minTail > minHead) {
             minTail--;
         }
         minQueue[minTail++] = i;
-        while (drops[minQueue[minTail - 1]].x - drops[minQueue[minHead]].x + 1 > w) {
-            minHead--;
+        while (drops[minQueue[minTail - 1]].x - drops[minQueue[minHead]].x > w) {
+            minHead++;
         }
-        if (drops[maxQueue[maxHead]].y - drops[minQueue[minHead]].y >= w) return true;
+        if (drops[maxQueue[maxHead]].y - drops[minQueue[minHead]].y >= d) return true;
     }
     return false;
 }
@@ -45,12 +46,16 @@ int main() {
     std::sort(drops + 1, drops + n + 1, [](const Drop &a, const Drop &b) -> bool {
         return a.x < b.x;
     });
-    int l = 1, r = drops[n].x - drops[1].x + 1;
-    while (l <= r) {
+    int minLen = INT_MAX;
+    for (int i = 2; i <= n; ++i) {
+        minLen = std::min(minLen, drops[i].x - drops[i - 1].x);
+    }
+    int l = minLen, r = drops[n].x - drops[1].x + 1;
+    while (l < r) {
         int mid = (l + r) / 2;
         if (check(mid)) {
             ans = mid;
-            r = mid - 1;
+            r = mid;
         } else {
             l = mid + 1;
         }

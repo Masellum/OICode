@@ -16,7 +16,7 @@ bool gauss_jordan(double mat[MAXN][MAXN]) {
         if (fabs(mat[idx][i]) <= 1e-10) return false;
         if (i != idx) {
             for (int j = i; j <= n + 1; ++j) {
-            std::swap(mat[i][j], mat[idx][j]);
+                std::swap(mat[i][j], mat[idx][j]);
             }
         }
         for (int j = 1; j <= n; ++j) {

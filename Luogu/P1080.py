@@ -11,23 +11,20 @@ class Minister:
 
 
 def main():
-    n: int = int(input())
+    n = int(input())
     l = list(map(int, input().split(' ')))
     a = int(l[0])
-    a: int
-    minister: [Minister] = []
+    minister = []
     for i in range(n):
         l = list(map(int, input().split(' ')))
         t1, t2 = l[0], l[1]
-        t1: int
-        t2: int
         minister.append(Minister(t1, t2))
     minister.sort()
-    ssum: int = a
-    ans: int = -1
-    size: int = len(minister)
+    ssum = a
+    ans = -1
+    size = len(minister)
     for i in range(size):
-        ans = max(ans, int(ssum / minister[i].b))
+        ans = max(ans, ssum // minister[i].b)
         ssum *= minister[i].a
     print(ans)
 
